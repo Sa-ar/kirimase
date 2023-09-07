@@ -1,5 +1,5 @@
-import { DBProviderOptions } from "../../types.js";
-import { wrapInParenthesis } from "../../utils.js";
+import { DBProviderOptions } from "@/types.js";
+import { wrapInParenthesis } from "@/utils.js";
 
 export const DBProviders: DBProviderOptions = {
   pg: [

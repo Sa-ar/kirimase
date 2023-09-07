@@ -1,5 +1,5 @@
-import { DBType } from "../../../types.js";
-import { createFile, readConfigFile } from "../../../utils.js";
+import { DBType } from "@/types.js";
+import { createFile, readConfigFile } from "@/utils.js";
 import { Schema } from "../types.js";
 import { formatTableName, toCamelCase } from "../utils.js";
 

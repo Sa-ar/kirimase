@@ -2,9 +2,9 @@ import {
   createFile,
   installShadcnUIComponents,
   readConfigFile,
-} from "../../../utils.js";
-import { addPackage } from "../../add/index.js";
-import { addTrpc } from "../../add/trpc/index.js";
+} from "@/utils.js";
+import { addPackage } from "@/commands/add/index.js";
+import { addTrpc } from "@/commands/add/trpc/index.js";
 import { Schema } from "../types.js";
 import {
   capitalise,

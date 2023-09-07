@@ -2,7 +2,7 @@ import { checkbox } from "@inquirer/prompts";
 import { Packages } from "./utils.js";
 import { addTrpc } from "./trpc/index.js";
 import { addDrizzle } from "./drizzle/index.js";
-import { readConfigFile } from "../../utils.js";
+import { readConfigFile } from "@/utils.js";
 import { initProject } from "../init/index.js";
 import { consola } from "consola";
 import { addNextAuth } from "./next-auth/index.js";

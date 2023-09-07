@@ -5,8 +5,8 @@ import {
   mysqlColumnType,
   pgColumnType,
   sqliteColumnType,
-} from "../../../types.js";
-import { createFile, readConfigFile } from "../../../utils.js";
+} from "@/types.js";
+import { createFile, readConfigFile } from "@/utils.js";
 import { Schema } from "../types.js";
 import {
   ReferenceType,

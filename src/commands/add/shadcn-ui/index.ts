@@ -7,8 +7,8 @@ import {
   pmInstallCommand,
   readConfigFile,
   replaceFile,
-} from "../../../utils.js";
-import { AvailablePackage } from "../../../types.js";
+} from "@/utils.js";
+import { AvailablePackage } from "@/types.js";
 
 export const installShadcnUI = async (packages: AvailablePackage[]) => {
   consola.start("Installing Shadcn UI...");

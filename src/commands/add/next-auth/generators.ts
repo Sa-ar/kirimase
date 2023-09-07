@@ -1,6 +1,6 @@
 import { consola } from "consola";
-import { DBType } from "../../../types.js";
-import { readConfigFile } from "../../../utils.js";
+import { DBType } from "@/types.js";
+import { readConfigFile } from "@/utils.js";
 import { AuthProvider, AuthProviders, capitalised } from "./utils.js";
 import fs from "fs";
 

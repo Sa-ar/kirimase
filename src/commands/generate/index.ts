@@ -1,10 +1,10 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { consola } from "consola";
-import { DBField, DBType, FieldType } from "../../types.js";
+import { DBField, DBType, FieldType } from "@/types.js";
 import { Choice } from "@inquirer/checkbox";
 import { createConfig, scaffoldModel } from "./generators/model.js";
 import { scaffoldAPIRoute } from "./generators/apiRoute.js";
-import { readConfigFile, wrapInParenthesis } from "../../utils.js";
+import { readConfigFile, wrapInParenthesis } from "@/utils.js";
 import { scaffoldTRPCRoute } from "./generators/trpcRoute.js";
 import { addPackage } from "../add/index.js";
 import { initProject } from "../init/index.js";

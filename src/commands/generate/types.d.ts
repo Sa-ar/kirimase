@@ -1,4 +1,4 @@
-import { DBField } from "../../types.js";
+import { DBField } from "@/types.js";
 
 export type Schema = {
   tableName: string;

@@ -5,7 +5,12 @@
     "module": "NodeNext",
     // "strict": true,
     "sourceMap": true,
-    "moduleResolution": "NodeNext"
+    "moduleResolution": "NodeNext",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
   "include": ["src/**/*"]
 }

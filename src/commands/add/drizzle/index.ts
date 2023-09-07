@@ -1,12 +1,12 @@
 import { confirm, input, select } from "@inquirer/prompts";
-import { DBProvider, DBType } from "../../../types.js";
-import { DBProviders } from "../../init/utils.js";
+import { DBProvider, DBType } from "@/types.js";
+import { DBProviders } from "@/commands/init/utils.js";
 import {
   addPackageToConfig,
   createFolder,
   readConfigFile,
   updateConfigFile,
-} from "../../../utils.js";
+} from "@/utils.js";
 import {
   addScriptsToPackageJson,
   createDotEnv,

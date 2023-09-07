@@ -9,8 +9,8 @@
 // 8. Add .env with database_url
 
 import { select } from "@inquirer/prompts";
-import { createConfigFile } from "../../utils.js";
-import { PMType } from "../../types.js";
+import { createConfigFile } from "@/utils.js";
+import { PMType } from "@/types.js";
 import { consola } from "consola";
 import { addPackage } from "../add/index.js";
 

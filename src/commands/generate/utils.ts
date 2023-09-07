@@ -1,4 +1,4 @@
-import { DBField, FieldType } from "../../types.js";
+import { DBField, FieldType } from "@/types.js";
 import { Schema } from "./types.js";
 
 export function toCamelCase(input: string): string {

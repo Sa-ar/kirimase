@@ -4,7 +4,7 @@ import {
   createFile,
   installPackages,
   readConfigFile,
-} from "../../../utils.js";
+} from "@/utils.js";
 import {
   apiAuthNextAuthTs,
   createAuthSchema,

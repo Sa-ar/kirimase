@@ -1,5 +1,5 @@
-import { AvailablePackage } from "../../types.js";
-import { readConfigFile, replaceFile } from "../../utils.js";
+import { AvailablePackage } from "@/types.js";
+import { readConfigFile, replaceFile } from "@/utils.js";
 import fs from "fs";
 
 export const Packages: { name: string; value: AvailablePackage }[] = [

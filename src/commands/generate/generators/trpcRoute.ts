@@ -1,5 +1,5 @@
 import { consola } from "consola";
-import { createFile, readConfigFile, replaceFile } from "../../../utils.js";
+import { createFile, readConfigFile, replaceFile } from "@/utils.js";
 import { Schema } from "../types.js";
 import { formatTableName } from "../utils.js";
 import fs from "fs";
