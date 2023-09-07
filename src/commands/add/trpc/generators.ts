@@ -212,10 +212,17 @@ export type Context = Awaited<ReturnType<typeof createContext>>;
 };
 
 export const libTrpcUtilsTs = () => {
-  return `function getBaseUrl() {
-  if (typeof window !== "undefined") return "";
-  if (process.env.VERCEL_URL) return \`https://${process.env.VERCEL_URL}\`;
-  return "http://localhost:3000";
+  return `export function getBaseUrl() {
+  switch (true) {
+    case typeof window !== "undefined":
+      return "";
+    case !!env.VERCEL_URL:
+      return \`https://\${env.VERCEL_URL}\`;
+    case !!env.RENDER_INTERNAL_HOSTNAME:
+      return \`http://\${env.RENDER_INTERNAL_HOSTNAME}:\${env.PORT}\`;
+    default:
+      return \`http://localhost:\${env.PORT ?? 3000}\`;
+  }
 }
 
 export function getUrl() {
