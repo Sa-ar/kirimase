@@ -3,18 +3,24 @@ import { execa } from "execa";
 import { existsSync } from "fs";
 import {
   addPackageToConfig,
+  installPackages,
   installShadcnUIComponents,
   pmInstallCommand,
   readConfigFile,
   replaceFile,
 } from "@/utils.js";
 import { AvailablePackage } from "@/types.js";
+import { addContextProviderToLayout } from "../utils.js";
 
 export const installShadcnUI = async (packages: AvailablePackage[]) => {
   consola.start("Installing Shadcn UI...");
   const { preferredPackageManager } = readConfigFile();
   const filePath = "components.json";
 
+  installPackages(
+    { regular: "lucide-react", dev: "" },
+    preferredPackageManager
+  );
   const baseArgs = ["shadcn-ui@latest", "init"];
   const installArgs =
     preferredPackageManager === "pnpm" ? ["dlx", ...baseArgs] : baseArgs;
@@ -33,7 +39,8 @@ export const installShadcnUI = async (packages: AvailablePackage[]) => {
       consola.error(`Failed to initialize Shadcn: ${error.message}`);
     }
   }
-  await installShadcnUIComponents(["button"]);
+  await installShadcnUIComponents(["button", "toast"]);
+  addContextProviderToLayout("ShadcnToast");
   if (packages.includes("next-auth")) updateSignInComponentWithShadcnUI();
 };
 

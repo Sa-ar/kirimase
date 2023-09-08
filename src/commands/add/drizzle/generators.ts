@@ -141,6 +141,13 @@ import Database from 'better-sqlite3';
 const sqlite = new Database('sqlite.db');
 export const db: BetterSQLite3Database = drizzle(sqlite);
 `;
+    //     case "bun-sqlite":
+    //       indexTS = `import { drizzle, BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
+    // import { Database } from 'bun:sqlite';
+    //
+    // const sqlite = new Database('sqlite.db');
+    // export const db: BunSQLiteDatabase = drizzle(sqlite);
+    // `;
     default:
       break;
   }
@@ -444,6 +451,7 @@ export const installDependencies = async (
       regular: "better-sqlite3",
       dev: "@types/better-sqlite3",
     },
+    // "bun-sqlite": { regular: "drizzle-orm", dev: "drizzle-kit" },
   };
   // note this change hasnt been tested yet
   const dbSpecificPackage = packages[dbType];
@@ -467,12 +475,15 @@ export const createDotEnv = (databaseUrl?: string) => {
 
 export const addToDotEnv = (items: { key: string; value: string }[]) => {
   const envPath = path.resolve(".env");
-  const envData = fs.readFileSync(envPath, "utf-8");
-
+  const envExists = fs.existsSync(envPath);
   const newData = items.map((item) => `${item.key}=${item.value}`).join("\n");
-  const updatedEnvData = `${envData}\n${newData}`;
-
-  fs.writeFileSync(envPath, updatedEnvData);
+  if (envExists) {
+    const envData = fs.readFileSync(envPath, "utf-8");
+    const updatedEnvData = `${envData}\n${newData}`;
+    fs.writeFileSync(envPath, updatedEnvData);
+  } else {
+    fs.writeFileSync(envPath, newData);
+  }
 };
 export function updateTsConfigTarget() {
   // Define the path to the tsconfig.json file

@@ -88,11 +88,14 @@ export function createFolder(relativePath: string) {
 // }
 
 export const runCommand = async (command: string, args: string[]) => {
+  const formattedArgs = args.filter((a) => a !== "");
   try {
-    await execa(command, args, { stdio: "inherit" });
+    await execa(command, formattedArgs, { stdio: "inherit" });
   } catch (error) {
     throw new Error(
-      `command "${command} ${args.join(" ")}" exited with code ${error.code}`
+      `command "${command} ${formattedArgs
+        .join(" ")
+        .trim()}" exited with code ${error.code}`
     );
   }
 };
@@ -165,7 +168,12 @@ export const wrapInParenthesis = (string: string) => {
 
 // shadcn specific utils
 
-export const pmInstallCommand = { pnpm: "pnpm", npm: "npx", yarn: "npx", bun: "bunx" };
+export const pmInstallCommand = {
+  pnpm: "pnpm",
+  npm: "npx",
+  yarn: "npx",
+  // bun: "bunx",
+};
 
 export async function installShadcnUIComponents(
   components: string[]
@@ -204,3 +212,8 @@ export async function installShadcnUIComponents(
     consola.info("All items already installed.");
   }
 }
+
+export const getFileContents = (filePath: string) => {
+  const fileContents = fs.readFileSync(filePath, "utf-8");
+  return fileContents;
+};

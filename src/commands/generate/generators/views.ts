@@ -1,5 +1,7 @@
+import { DBField, FieldType } from "../../../types.js";
 import {
   createFile,
+  getFileContents,
   installShadcnUIComponents,
   readConfigFile,
 } from "@/utils.js";
@@ -53,6 +55,14 @@ export const scaffoldViewsAndComponents = (schema: Schema) => {
     schema.fields.filter((field) => field.type === "boolean").length > 0
       ? baseComponents.push("checkbox")
       : null;
+    schema.fields.filter((field) => field.type === "references").length > 0
+      ? baseComponents.push("select")
+      : null;
+    schema.fields.filter(
+      (field) => field.type === "date" || field.type === "timestamp"
+    ).length > 0
+      ? baseComponents.push("popover", "calendar")
+      : null;
     installShadcnUIComponents(baseComponents);
   } else {
     addPackage();
@@ -64,6 +74,7 @@ const generateView = (schema: Schema) => {
     tableNameCamelCase,
     tableNameSingularCapitalised,
     tableNameCapitalised,
+    tableNameNormalEnglishCapitalised,
   } = formatTableName(schema.tableName);
   return `import ${tableNameSingularCapitalised}List from "@/components/${tableNameCamelCase}/${tableNameSingularCapitalised}List";
 import New${tableNameSingularCapitalised}Modal from "@/components/${tableNameCamelCase}/${tableNameSingularCapitalised}Modal";
@@ -79,9 +90,9 @@ export default async function ${tableNameCapitalised}() {
   }const { ${tableNameCamelCase} } = await get${tableNameCapitalised}();  
 
   return (
-    <main className="max-w-3xl mx-auto p-5 sm:p-0 sm:pt-4">
+    <main className="max-w-3xl mx-auto p-5 md:p-0 sm:pt-4">
       <div className="flex justify-between">
-        <h1 className="font-semibold text-2xl my-2">${tableNameCapitalised}</h1>
+        <h1 className="font-semibold text-2xl my-2">${tableNameNormalEnglishCapitalised}</h1>
         <New${tableNameSingularCapitalised}Modal />
       </div>
       <${tableNameSingularCapitalised}List ${tableNameCamelCase}={${tableNameCamelCase}} />
@@ -91,6 +102,13 @@ export default async function ${tableNameCapitalised}() {
 `;
 };
 
+const queryHasJoins = (tableName: string) => {
+  const { hasSrc } = readConfigFile();
+  const path = `${hasSrc ? "src/" : ""}lib/api/${tableName}/queries.ts`;
+  const queryContent = getFileContents(path);
+  return queryContent.includes("Join");
+};
+
 const createListComponent = (schema: Schema) => {
   const {
     tableNameCamelCase,
@@ -98,6 +116,8 @@ const createListComponent = (schema: Schema) => {
     tableNameSingularCapitalised,
     tableNameCapitalised,
     tableNameFirstChar,
+    tableNameNormalEnglishSingularLowerCase,
+    tableNameNormalEnglishCapitalised,
   } = formatTableName(schema.tableName);
   const relations = schema.fields.filter(
     (field) => field.type === "references"
@@ -140,7 +160,11 @@ const ${tableNameSingularCapitalised} = ({ ${tableNameSingular} }: { ${tableName
           relations.length > 0
             ? `${tableNameSingular}.${tableNameSingular}`
             : tableNameSingular
-        }.${schema.fields[0].name}}</div>
+        }.${toCamelCase(schema.fields[0].name)}${
+    schema.fields[0].type === "date" || schema.fields[0].type === "timestamp"
+      ? ".toString()"
+      : ""
+  }}</div>
       </div>
       <${tableNameSingularCapitalised}Modal ${tableNameSingular}={${
     relations.length > 0
@@ -154,12 +178,9 @@ const ${tableNameSingularCapitalised} = ({ ${tableNameSingular} }: { ${tableName
 const EmptyState = () => {
   return (
     <div className="text-center">
-      <h3 className="mt-2 text-sm font-semibold text-gray-900">No ${toNormalEnglish(
-        tableNameCamelCase,
-        true
-      )}</h3>
+      <h3 className="mt-2 text-sm font-semibold text-gray-900">No ${tableNameNormalEnglishSingularLowerCase}</h3>
       <p className="mt-1 text-sm text-gray-500">
-        Get started by creating a new ${tableNameSingular}.
+        Get started by creating a new ${tableNameNormalEnglishSingularLowerCase}.
       </p>
       <div className="mt-6">
         <${tableNameSingularCapitalised}Modal emptyState={true} />
@@ -171,6 +192,82 @@ const EmptyState = () => {
 `;
 };
 
+const createformInputComponent = (field: DBField): string => {
+  if (field.type == "boolean")
+    return `<br />
+            <FormControl>
+              <Checkbox {...field} checked={!!field.value} onCheckedChange={field.onChange} value={""} />
+            </FormControl>`;
+  if (field.type == "references") {
+    const referencesSingular = field.references.slice(0, -1);
+    const entity = queryHasJoins(toCamelCase(field.references))
+      ? `${referencesSingular}.${referencesSingular}`
+      : referencesSingular;
+    return `<FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={String(field.value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a ${referencesSingular}" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {${field.references}?.${field.references}.map((${referencesSingular}) => (
+                      <SelectItem key={${entity}.id} value={${entity}.id.toString()}>
+                        {${entity}.id}  {/* TODO: Replace with a field from the ${referencesSingular} model */}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+            </FormControl>
+`;
+  }
+  if (field.type == "date" || field.type == "timestamp")
+    return `<br />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(new Date(field.value), "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={new Date(field.value)}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+`;
+  return `<FormControl>
+            <Input {...field} />
+          </FormControl>
+`;
+};
+
+const generateTrpcGetQuery = (referenceTable: string) => {
+  const { tableNameCamelCase, tableNameCapitalised } =
+    formatTableName(referenceTable);
+  return `const { data: ${tableNameCamelCase} } = trpc.${tableNameCamelCase}.get${tableNameCapitalised}.useQuery();`;
+};
+
 const createFormComponent = (schema: Schema) => {
   const {
     tableNameCamelCase,
@@ -178,7 +275,12 @@ const createFormComponent = (schema: Schema) => {
     tableNameSingularCapitalised,
     tableNameCapitalised,
     tableNameFirstChar,
+    tableNameNormalEnglishSingular,
   } = formatTableName(schema.tableName);
+  const { packages, driver } = readConfigFile();
+  const relations = schema.fields.filter(
+    (field) => field.type === "references"
+  );
 
   return `"use client";
 
@@ -201,8 +303,26 @@ import { z } from "zod";${
     schema.fields.filter((field) => field.type === "boolean").length > 0
       ? '\nimport { Checkbox } from "../ui/checkbox";'
       : ""
+  }${
+    relations.length > 0
+      ? '\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";'
+      : ""
+  }${
+    schema.fields.filter(
+      (field) => field.type === "date" || field.type === "timestamp"
+    ).length > 0
+      ? `import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";`
+      : ""
   }
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";${
+    packages.includes("shadcn-ui")
+      ? `\nimport { useToast } from "@/components/ui/use-toast";`
+      : ""
+  }
 
 const ${tableNameSingularCapitalised}Form = ({
   ${tableNameSingular},
@@ -210,8 +330,16 @@ const ${tableNameSingularCapitalised}Form = ({
 }: {
   ${tableNameSingular}?: ${tableNameSingularCapitalised};
   closeModal: () => void;
-}) => {
-
+}) => {${
+    packages.includes("shadcn-ui") ? `\n  const { toast } = useToast();` : ""
+  }
+  ${
+    relations.length > 0
+      ? relations
+          .map((relation) => generateTrpcGetQuery(relation.references))
+          .join("\n  ")
+      : ""
+  }
   const editing = !!${tableNameSingular}?.id;
 
   const router = useRouter();
@@ -223,32 +351,54 @@ const ${tableNameSingularCapitalised}Form = ({
     // errors locally but not in production
     resolver: zodResolver(insert${tableNameSingularCapitalised}Params),
     defaultValues: ${tableNameSingular} ?? {
-      ${schema.fields.map(
-        (field) =>
-          `${toCamelCase(field.name)}: ${defaultValueMappings[field.type]}`
-      )}
+      ${schema.fields
+        .map(
+          (field) =>
+            `${toCamelCase(field.name)}: ${
+              defaultValueMappings[driver][field.type]
+            }`
+        )
+        .join(",\n     ")}
     },
   });
 
-  const onSuccess = () => {
+  const onSuccess = (${
+    packages.includes("shadcn-ui")
+      ? 'action: "create" | "update" | "delete"'
+      : ""
+  }) => {
     utils.${tableNameCamelCase}.get${tableNameCapitalised}.invalidate();
     router.refresh();
-    closeModal();
+    closeModal();${
+      packages.includes("shadcn-ui")
+        ? `toast({
+      title: 'Success',
+      description: \`${tableNameNormalEnglishSingular} \${action}d!\`,
+      variant: "default",
+    });`
+        : null
+    }
   };
 
   const { mutate: create${tableNameSingularCapitalised}, isLoading: isCreating } =
     trpc.${tableNameCamelCase}.create${tableNameSingularCapitalised}.useMutation({
-      onSuccess,
+      onSuccess${
+        packages.includes("shadcn-ui") ? ': () => onSuccess("create")' : ""
+      },
     });
 
   const { mutate: update${tableNameSingularCapitalised}, isLoading: isUpdating } =
     trpc.${tableNameCamelCase}.update${tableNameSingularCapitalised}.useMutation({
-      onSuccess,
+      onSuccess${
+        packages.includes("shadcn-ui") ? ': () => onSuccess("update")' : ""
+      },
     });
 
   const { mutate: delete${tableNameSingularCapitalised}, isLoading: isDeleting } =
     trpc.${tableNameCamelCase}.delete${tableNameSingularCapitalised}.useMutation({
-      onSuccess,
+      onSuccess${
+        packages.includes("shadcn-ui") ? ': () => onSuccess("delete")' : ""
+      },
     });
 
   const handleSubmit = (values: New${tableNameSingularCapitalised}Params) => {
@@ -268,13 +418,7 @@ const ${tableNameSingularCapitalised}Form = ({
           name="${toCamelCase(field.name)}"
           render={({ field }) => (<FormItem>
               <FormLabel>${toNormalEnglish(field.name)}</FormLabel>
-              <FormControl>
-                ${
-                  field.type === "boolean"
-                    ? `<Checkbox {...field} checked={field.value} onCheckedChange={field.onChange} value={""} />`
-                    : '<Input placeholder="" {...field} />'
-                }
-              </FormControl>
+                ${createformInputComponent(field)}
               <FormMessage />
             </FormItem>
           )}
@@ -313,8 +457,7 @@ export const createModalComponent = (schema: Schema) => {
     tableNameCamelCase,
     tableNameSingular,
     tableNameSingularCapitalised,
-    tableNameCapitalised,
-    tableNameFirstChar,
+    tableNameNormalEnglishSingular,
   } = formatTableName(schema.tableName);
   return `"use client";
 
@@ -360,7 +503,7 @@ export default function ${tableNameSingularCapitalised}Modal({
               <path d="M5 12h14" />
               <path d="M12 5v14" />
             </svg>
-            New ${tableNameSingularCapitalised}
+            New ${tableNameNormalEnglishSingular}
           </Button>
         ) : (
         <Button
@@ -372,7 +515,7 @@ export default function ${tableNameSingularCapitalised}Modal({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader className="px-5 pt-5">
-          <DialogTitle>{ editing ? "Edit" : "Create" } ${tableNameSingularCapitalised}</DialogTitle>
+          <DialogTitle>{ editing ? "Edit" : "Create" } ${tableNameNormalEnglishSingular}</DialogTitle>
         </DialogHeader>
         <div className="px-5 pb-5">
           <${tableNameSingularCapitalised}Form closeModal={closeModal} ${tableNameSingular}={${tableNameSingular}} />
